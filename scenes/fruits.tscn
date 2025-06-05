@@ -1,0 +1,71 @@
+[gd_scene load_steps=10 format=3 uid="uid://8uipysy3qh66"]
+
+[ext_resource type="Script" uid="uid://b1u6lek4qfejt" path="res://scripts/fruits.gd" id="1_4b3k7"]
+[ext_resource type="Texture2D" uid="uid://dgdqul0ah6mix" path="res://assets/fruits/guava.tres" id="2_iuj4e"]
+[ext_resource type="Shape2D" uid="uid://ccwmegkgcukrm" path="res://assets/fruits/apple_shape.tres" id="3_iuj4e"]
+[ext_resource type="AudioStream" uid="uid://c3fwnvfhra1a0" path="res://audio/juice.mp3" id="4_dgkhl"]
+[ext_resource type="Texture2D" uid="uid://tfvki3jjuikd" path="res://assets/fruits/faces.png" id="5_mue5y"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5v7wr"]
+atlas = ExtResource("5_mue5y")
+region = Rect2(0, 400, 400, 400)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c6urs"]
+atlas = ExtResource("5_mue5y")
+region = Rect2(0, 0, 400, 400)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sgupl"]
+atlas = ExtResource("5_mue5y")
+region = Rect2(0, 800, 400, 400)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_uroet"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5v7wr")
+}],
+"loop": true,
+"name": &"falling",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c6urs")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sgupl")
+}],
+"loop": true,
+"name": &"rolling",
+"speed": 5.0
+}]
+
+[node name="Fruits" type="RigidBody2D"]
+scale = Vector2(1, 0.995535)
+collision_layer = 2
+collision_mask = 3
+script = ExtResource("1_4b3k7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(1, 4)
+scale = Vector2(11, 9.68)
+shape = ExtResource("3_iuj4e")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(1.186, 1)
+texture = ExtResource("2_iuj4e")
+
+[node name="Merge" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_dgkhl")
+volume_db = 24.0
+
+[node name="Face_anim" type="AnimatedSprite2D" parent="."]
+position = Vector2(2, 0)
+scale = Vector2(0.35, 0.356)
+sprite_frames = SubResource("SpriteFrames_uroet")
+animation = &"rolling"

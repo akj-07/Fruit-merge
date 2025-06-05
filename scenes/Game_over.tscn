@@ -1,0 +1,55 @@
+[gd_scene load_steps=7 format=3 uid="uid://bwgwv2rq3nqpo"]
+
+[ext_resource type="Texture2D" uid="uid://56tnq5ie4i4g" path="res://assets/panel.png" id="1_1fmsk"]
+[ext_resource type="Texture2D" uid="uid://clllj1wacl6sl" path="res://assets/background.png" id="1_pmslm"]
+[ext_resource type="Script" uid="uid://bw0kus2i5kapp" path="res://scripts/game_over.gd" id="1_u43vl"]
+[ext_resource type="Texture2D" uid="uid://c6pc6b2whnpg8" path="res://assets/exit.tres" id="4_tod8s"]
+[ext_resource type="Texture2D" uid="uid://c5vx6ja88yp2q" path="res://assets/reload.tres" id="4_wg8tr"]
+[ext_resource type="FontFile" uid="uid://bu7rb6jlkqmcu" path="res://assets/LilitaOne-Regular-NotoSans-Black.ttf" id="6_u43vl"]
+
+[node name="Game_Over" type="Node2D"]
+script = ExtResource("1_u43vl")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(-9, 450)
+texture = ExtResource("1_pmslm")
+
+[node name="Panel" type="Sprite2D" parent="."]
+position = Vector2(351, 486)
+texture = ExtResource("1_1fmsk")
+
+[node name="exit_button" type="Button" parent="Panel"]
+offset_left = -56.0
+offset_top = 134.0
+offset_right = 69.0
+offset_bottom = 261.0
+icon = ExtResource("4_tod8s")
+metadata/_edit_use_anchors_ = true
+
+[node name="Reload" type="Button" parent="Panel"]
+offset_left = -87.0
+offset_top = -141.0
+offset_right = 38.0
+offset_bottom = -14.0
+scale = Vector2(1.4, 1.4)
+icon = ExtResource("4_wg8tr")
+metadata/_edit_use_anchors_ = true
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="Control"]
+layout_mode = 0
+offset_left = 175.0
+offset_top = 207.0
+offset_right = 551.0
+offset_bottom = 299.0
+theme_override_fonts/font = ExtResource("6_u43vl")
+theme_override_font_sizes/font_size = 80
+text = "Game Over"
+
+[connection signal="pressed" from="Panel/exit_button" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="Panel/Reload" to="." method="_on_reload_pressed"]
