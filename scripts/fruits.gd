@@ -12,7 +12,7 @@ const FRUIT_TEXTURES = [
 	preload("res://assets/fruits/orange.tres"),
 	preload("res://assets/fruits/guava.tres")
 ]
-const FRUIT_SHAPE = [3.5, 5, 7.5, 10, 13, 16]
+const FRUIT_SHAPE = [2.5, 3.5, 5, 7, 8, 10]
 @onready var merge: AudioStreamPlayer2D = $Merge
 @onready var face_anim: AnimatedSprite2D = $Face_anim
 @onready var sprite = $Sprite2D
@@ -80,9 +80,9 @@ func grow(from_fusion := false):
 	)
 
 func setup_physics():
-	gravity_scale = 1
-	linear_damp = 0.5
-	angular_damp = 0.5
+	gravity_scale = 2
+	linear_damp = 2
+	angular_damp = 5
 	collision_layer = 2
 	collision_mask = 1 | 2  
 
@@ -91,12 +91,13 @@ func initialize_fruit(type: int = -1):
 		fruit_type = type
 	else:
 		# Only generate the first three smallest fruits randomly
-		fruit_type = randi() % 5  # This will only generate cherry (0), strawberry (1), or grapes (2)
+		fruit_type = randi() % 3  # This will only generate cherry (0), strawberry (1), or grapes (2)
 	
 	set_fruit_appearance()
 
 func set_fruit_appearance():
 	sprite.texture = FRUIT_TEXTURES[fruit_type]
+	sprite.scale = Vector2.ONE
 	var new_shape = CircleShape2D.new()
 	new_shape.radius = FRUIT_SHAPE[fruit_type]
 	collision_shape.shape = new_shape

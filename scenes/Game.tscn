@@ -105,6 +105,7 @@ volume_db = -5.0
 autoplay = true
 
 [node name="CheckFruit" type="Timer" parent="."]
+wait_time = 2.0
 
 [connection signal="body_entered" from="Drop Zone" to="." method="_on_drop_zone_body_entered"]
 [connection signal="body_exited" from="Drop Zone" to="." method="_on_drop_zone_body_exited"]
