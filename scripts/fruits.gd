@@ -12,7 +12,7 @@ const FRUIT_TEXTURES = [
 	preload("res://assets/fruits/orange.tres"),
 	preload("res://assets/fruits/guava.tres")
 ]
-const FRUIT_SHAPE = [3, 4.5, 7, 9.5, 12.5]
+const FRUIT_SHAPE = [3.5, 5, 7.5, 10, 13, 16]
 @onready var merge: AudioStreamPlayer2D = $Merge
 @onready var face_anim: AnimatedSprite2D = $Face_anim
 @onready var sprite = $Sprite2D
@@ -90,7 +90,8 @@ func initialize_fruit(type: int = -1):
 	if type >= 0:
 		fruit_type = type
 	else:
-		fruit_type = randi() % 3  
+		# Only generate the first three smallest fruits randomly
+		fruit_type = randi() % 5  # This will only generate cherry (0), strawberry (1), or grapes (2)
 	
 	set_fruit_appearance()
 
@@ -100,7 +101,7 @@ func set_fruit_appearance():
 	new_shape.radius = FRUIT_SHAPE[fruit_type]
 	collision_shape.shape = new_shape
 	
-	var base_radius = 4  # Smallest fruit size, used for reference
+	var base_radius = 3.5  # Smallest fruit size, used for reference
 	var current_radius = FRUIT_SHAPE[fruit_type]
 	var scale_factor = current_radius / base_radius
 	
@@ -218,7 +219,7 @@ func create_merged_fruit(merged_type: int, position: Vector2):
 	
 	# Start the grow animation
 	merged_fruit.grow(true)
-
+	merged_fruit.add_to_group("Fruit")
 # NEW TWEENING FUNCTIONS
 func pause_until_released():
 	if is_paused:
