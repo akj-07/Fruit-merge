@@ -3,6 +3,8 @@ extends RigidBody2D
 signal fruit_collided
 signal fruit_merged
 signal update_score(point: int)
+signal fruit_crossed_limit
+
 
 const FRUIT_TEXTURES = [
 	preload("res://assets/fruits/cherry.tres"),
@@ -10,15 +12,22 @@ const FRUIT_TEXTURES = [
 	preload("res://assets/fruits/grapes.tres"),
 	preload("res://assets/fruits/lemon.tres"),
 	preload("res://assets/fruits/orange.tres"),
-	preload("res://assets/fruits/guava.tres")
+	preload("res://assets/fruits/guava.tres"),
+	preload("res://assets/fruits/pear.tres"),
+	preload("res://assets/fruits/peach.tres"),
+	preload("res://assets/fruits/pineapple.tres"),
+	preload("res://assets/fruits/melon.tres"),
+	preload("res://assets/fruits/watermelon.tres"),
 ]
-const FRUIT_SHAPE = [2.5, 3.5, 5, 7, 8, 10]
+const FRUIT_SHAPE = [2.5, 3.5, 6, 7, 8.5, 10, 11, 13, 15, 17, 19]
+@onready var drop: AudioStreamPlayer2D = $Drop
 @onready var merge: AudioStreamPlayer2D = $Merge
 @onready var face_anim: AnimatedSprite2D = $Face_anim
 @onready var sprite = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var tween: Tween
 
+var invincible := true
 var fruit_type = 0
 var has_collided = false
 var is_paused := false
@@ -27,15 +36,33 @@ var can_drop := true
 var is_merging := false
 var merge_timer := 0.0
 var tween_speed := 2.0  # Adjust this to control movement speed
+var is_on_floor := false
+var limit_y: float = 0.0
+var is_dragging := false
+var drag_speed := 10.0 
+@onready var landing_line: Line2D = $LandingLine
+var raycast: RayCast2D
 
 func _ready() -> void:
-	setup_physics()
 	initialize_fruit()
+	setup_physics()
 	setup_collision_detection()
 	create_tween_node()
 	
 	face_anim.play("idle") 
 	
+	raycast = RayCast2D.new()
+	raycast.target_position = Vector2.DOWN * 1000  # Long enough to reach the bottom
+	raycast.collision_mask = 1 | 2 # Layer for floor and other fruits
+	raycast.enabled = true
+	add_child(raycast)
+
+	# Setup landing line
+	raycast.position = Vector2.ZERO
+	landing_line.width = 8
+	landing_line.default_color = Color(1, 0, 0)
+	print("Paused:", is_paused, " Drop allowed:", can_drop)
+
 
 func create_tween_node():
 	tween = create_tween()
@@ -80,24 +107,43 @@ func grow(from_fusion := false):
 	)
 
 func setup_physics():
-	gravity_scale = 2
-	linear_damp = 2
-	angular_damp = 5
+	gravity_scale = 1
 	collision_layer = 2
 	collision_mask = 1 | 2  
+	
+	# FIXED: More balanced mass distribution
+	# Use linear scaling instead of exponential
+	var base_mass = 1.0
+	var mass_multiplier = 1.0 + (fruit_type * 0.5)  # Gradual increase
+	mass = base_mass * mass_multiplier
+	
+	# FIXED: Better physics material
+	var mat = PhysicsMaterial.new()
+	mat.bounce = 0.2  # Slightly higher bounce
+	mat.friction = 0.8  # Higher friction to reduce sliding/spinning
+	physics_material_override = mat
+	
+	# FIXED: Enable angular damping to prevent excessive rotation
+	angular_damp = 5.0  # Add this line - it's crucial!
+	linear_damp = 0.5   # Slight linear damping too
 
 func initialize_fruit(type: int = -1):
 	if type >= 0:
 		fruit_type = type
 	else:
 		# Only generate the first three smallest fruits randomly
-		fruit_type = randi() % 3  # This will only generate cherry (0), strawberry (1), or grapes (2)
+		fruit_type = randi() % 5  # This will only generate cherry (0), strawberry (1), or grapes (2)
 	
 	set_fruit_appearance()
 
 func set_fruit_appearance():
 	sprite.texture = FRUIT_TEXTURES[fruit_type]
-	sprite.scale = Vector2.ONE
+	if fruit_type == 0:  # Cherry
+		sprite.scale = Vector2(1.5, 1.5)  # 50% larger
+	elif fruit_type == 1:  # Strawberry
+		sprite.scale = Vector2(1.3, 1.3)  # 30% larger
+	else:
+		sprite.scale = Vector2.ONE
 	var new_shape = CircleShape2D.new()
 	new_shape.radius = FRUIT_SHAPE[fruit_type]
 	collision_shape.shape = new_shape
@@ -106,12 +152,17 @@ func set_fruit_appearance():
 	var current_radius = FRUIT_SHAPE[fruit_type]
 	var scale_factor = current_radius / base_radius
 	
-	face_anim.scale = Vector2(0.2,0.2) * scale_factor
+	if fruit_type == 0:  # Cherry
+		face_anim.scale = Vector2(0.3, 0.297)  # 50% larger
+	elif fruit_type == 1:  # Strawberry
+		face_anim.scale = Vector2(0.26, 0.257)  # 30% larger
+	else:
+		face_anim.scale = Vector2(0.2, 0.198) * scale_factor
 
 
 func setup_collision_detection():
 	contact_monitor = true
-	max_contacts_reported = 10
+	max_contacts_reported = 1
 	connect("body_entered", Callable(self, "_on_body_entered"))
 
 func _process(delta):
@@ -129,8 +180,14 @@ func _process(delta):
 		face_anim.play("idle")
 	else:
 		face_anim.play("idle")
+		
+	if is_paused and can_drop:
+		update_landing_line()
+	else:
+		landing_line.visible = false
 
 func _on_body_entered(body):
+	print("Collision with: ", body.name, " Parent: ", body.get_parent().name if body.get_parent() else "No parent")
 	if is_merging:
 		return
 
@@ -144,18 +201,23 @@ func _on_body_entered(body):
 		handle_general_collision()
 
 func handle_floor_collision():
+	print("Floor collision - has_collided before: ", has_collided)
 	if not has_collided:
 		has_collided = true
+		is_on_floor = true
 		emit_signal("fruit_collided")
-		freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
+		#invincible = false
+		#freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
 
 func handle_fruit_collision(other_fruit):
+	print("Fruit collision - has_collided before: ", has_collided)  # Debug print
 	if can_merge_with(other_fruit):
 		merge_with(other_fruit)
 	else:
 		if not has_collided:
 			has_collided = true
 			emit_signal("fruit_collided")
+			#invincible = false
 
 func can_merge_with(other_fruit) -> bool:
 	if other_fruit.get_fruit_type() != fruit_type:
@@ -169,6 +231,7 @@ func can_merge_with(other_fruit) -> bool:
 	
 	if merge_timer > 0 or other_fruit.merge_timer > 0:
 		return false
+	
 	
 	return true
 
@@ -192,7 +255,7 @@ func merge_with(other_fruit):
 	
 	# Create the merged fruit before removing the old ones
 	create_merged_fruit(merged_type, merge_position)
-	emit_signal("update_score", 10)
+	emit_signal("update_score", 10*fruit_type+1)
 	
 	# Add a small delay before removing the old fruits
 	await get_tree().create_timer(0.1).timeout
@@ -210,14 +273,18 @@ func create_merged_fruit(merged_type: int, position: Vector2):
 	
 	# Initialize the fruit's appearance
 	merged_fruit.set_fruit_appearance()
-	
+	merged_fruit.limit_y = limit_y 
 	# Set a shorter merge timer for the new fruit
 	merged_fruit.merge_timer = 0.1
+	merged_fruit.setup_physics()
 	
 	# Ensure the new fruit can merge
 	merged_fruit.is_merging = false
 	merged_fruit.has_collided = false
 	
+	#merged_fruit.linear_velocity = Vector2.ZERO
+	#merged_fruit.angular_velocity = 0
+	#
 	# Start the grow animation
 	merged_fruit.grow(true)
 	merged_fruit.add_to_group("Fruit")
@@ -226,7 +293,7 @@ func pause_until_released():
 	if is_paused:
 		return
 	is_paused = true
-	freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
+	#freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
 	sleeping = true
 	can_drop = true
 	set_pickable(true)
@@ -236,6 +303,12 @@ func _input_event(viewport, event, shape_idx):
 	if is_paused and can_drop and not is_merging:
 		if event is InputEventScreenTouch or event is InputEventMouseButton:
 			if event.pressed:
+				is_dragging = true
+				handle_touch_input(event.position)
+			else:
+				is_dragging = false
+		elif event is InputEventScreenDrag or event is InputEventMouseMotion:
+			if is_dragging:
 				handle_touch_input(event.position)
 
 func handle_touch_input(touch_position: Vector2):
@@ -264,7 +337,7 @@ func move_to_position(target_x: float):
 	# Calculate tween duration based on distance
 	var distance = abs(target_x - start_pos.x)
 	var duration = distance / (tween_speed * 100)  # Adjust multiplier as needed
-	duration = clamp(duration, 0.1, 1.0)  # Min 0.1s, max 1.0s
+	duration = clamp(duration, 0.1, 0.2)  # Min 0.1s, max 1.0s
 	
 	# Kill any existing tween and create new one
 	if tween:
@@ -276,32 +349,37 @@ func move_to_position(target_x: float):
 	tween.tween_callback(drop_fruit)
 
 func drop_fruit():
+	drop.play()
 	is_tweening = false
+	is_dragging = false
 	physics_material_override = PhysicsMaterial.new()
-	physics_material_override.bounce = 0.01
+	physics_material_override.bounce = 0.0
+	physics_material_override.friction = 1.0
 
 	self.global_position = global_position  
-	#self.sleeping = false  
-	freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
-	linear_velocity = Vector2.ZERO
+	#freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC # Changed from KINEMATIC
+	#apply_central_impulse(Vector2(0, 300))
+	#linear_velocity = Vector2(0, 300)
+	#angular_velocity = 0
 
 	# State flags
 	has_collided = false
 	can_drop = false
+	invincible = true
+	#print("Dropping fruit - Position: ", global_position, " Velocity: ", linear_velocity)
+	#resume_physics()
+	#print("Dropping fruit - Position: ", global_position, " Velocity: ", linear_velocity, " has_collided: ", has_collided)
 	
-
-
 func resume_physics():
 	is_paused = false
-	freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
+	#freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
 	freeze = false
 	sleeping = false
 	has_collided = false
 	can_drop = false  # Prevent further interaction once dropped
-	
-	freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_STATIC
+	apply_central_impulse(Vector2(0, 300))
 	await get_tree().process_frame  # Wait a frame to ensure state sync
-	freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
+	print("Resuming physics - Velocity: ", linear_velocity)
 	
 # ALTERNATIVE: Click anywhere on screen to move fruit
 func _unhandled_input(event):
@@ -324,6 +402,7 @@ func set_drag_allowed(value: bool) -> void:
 func set_fruit_type(t: int):
 	fruit_type = t
 	set_fruit_appearance()
+	setup_physics()
 
 func get_fruit_type() -> int:
 	return fruit_type
@@ -339,3 +418,43 @@ func _on_tween_started():
 	var scale_tween = create_tween()
 	scale_tween.tween_property(sprite, "scale", Vector2(1.1, 1.1), 0.1)
 	scale_tween.tween_property(sprite, "scale", Vector2(1.0, 1.0), 0.1)
+
+func is_fruit_paused() -> bool:
+	return is_paused
+	
+func has_crossed_limit() -> bool:
+	return global_position.y >= limit_y
+
+func _physics_process(delta):
+	var game_scene = get_node("/root/Game")
+	if position.y < 10: return  # Not yet dropped
+
+	if position.y < limit_y:  # Hasn't reached limit line yet
+		return
+
+	if not invincible and global_position.y >= limit_y:  
+		print("Has collided:",has_collided)
+		print("Physics process - Velocity: ", linear_velocity, " Position: ", global_position)
+		get_tree().change_scene_to_file("res://scenes/Game_over.tscn")
+		set_deferred("freeze", true)  # Prevent further motion after game over
+	
+	# FIXED: More aggressive angular velocity damping
+	# Clamp angular velocity to prevent wild spinning
+	if abs(angular_velocity) > 10.0:  # Maximum allowed rotation speed
+		angular_velocity = sign(angular_velocity) * 10.0
+	
+	# Additional damping when fruits are moving slowly (likely stacked)
+	if linear_velocity.length() < 5.0:
+		angular_velocity *= 0.9  # Reduce rotation when nearly stationary
+
+func update_landing_line():
+	# Cast ray downward
+	raycast.force_raycast_update()
+
+	if raycast.is_colliding():
+		var collision_point = raycast.get_collision_point()
+		# Draw line from fruit to collision point
+		landing_line.points = [Vector2.ZERO, collision_point - global_position]
+		landing_line.visible = true
+	else:
+		landing_line.visible = false

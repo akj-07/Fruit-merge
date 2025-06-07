@@ -8,6 +8,8 @@
 [ext_resource type="FontFile" uid="uid://bu7rb6jlkqmcu" path="res://assets/LilitaOne-Regular-NotoSans-Black.ttf" id="6_u43vl"]
 
 [node name="Game_Over" type="Node2D"]
+position = Vector2(-166, -40)
+scale = Vector2(2, 2)
 script = ExtResource("1_u43vl")
 
 [node name="Background" type="Sprite2D" parent="."]

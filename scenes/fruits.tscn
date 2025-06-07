@@ -1,9 +1,10 @@
-[gd_scene load_steps=10 format=3 uid="uid://8uipysy3qh66"]
+[gd_scene load_steps=12 format=3 uid="uid://8uipysy3qh66"]
 
 [ext_resource type="Script" uid="uid://b1u6lek4qfejt" path="res://scripts/fruits.gd" id="1_4b3k7"]
 [ext_resource type="Texture2D" uid="uid://dgdqul0ah6mix" path="res://assets/fruits/guava.tres" id="2_iuj4e"]
 [ext_resource type="Shape2D" uid="uid://ccwmegkgcukrm" path="res://assets/fruits/apple_shape.tres" id="3_iuj4e"]
-[ext_resource type="AudioStream" uid="uid://c3fwnvfhra1a0" path="res://audio/juice.mp3" id="4_dgkhl"]
+[ext_resource type="AudioStream" uid="uid://cmpe40b0elkm6" path="res://audio/pop.mp3" id="4_5v7wr"]
+[ext_resource type="AudioStream" uid="uid://cs80uiow82hon" path="res://audio/ui-pop-sound-316482.mp3" id="5_5v7wr"]
 [ext_resource type="Texture2D" uid="uid://tfvki3jjuikd" path="res://assets/fruits/faces.png" id="5_mue5y"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_5v7wr"]
@@ -45,6 +46,8 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="Curve" id="Curve_5v7wr"]
+
 [node name="Fruits" type="RigidBody2D"]
 scale = Vector2(1, 0.995535)
 collision_layer = 2
@@ -52,7 +55,6 @@ collision_mask = 3
 script = ExtResource("1_4b3k7")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(1, 4)
 scale = Vector2(11, 9.68)
 shape = ExtResource("3_iuj4e")
 
@@ -61,11 +63,18 @@ scale = Vector2(1.186, 1)
 texture = ExtResource("2_iuj4e")
 
 [node name="Merge" type="AudioStreamPlayer2D" parent="."]
-stream = ExtResource("4_dgkhl")
-volume_db = 24.0
+stream = ExtResource("4_5v7wr")
+volume_db = 12.0
+
+[node name="Drop" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("5_5v7wr")
+volume_db = 12.0
 
 [node name="Face_anim" type="AnimatedSprite2D" parent="."]
-position = Vector2(2, 0)
-scale = Vector2(0.35, 0.356)
+scale = Vector2(0.3, 0.305)
 sprite_frames = SubResource("SpriteFrames_uroet")
-animation = &"rolling"
+animation = &"idle"
+
+[node name="LandingLine" type="Line2D" parent="."]
+z_index = 1
+width_curve = SubResource("Curve_5v7wr")

@@ -1,3 +1,5 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+Watermelon Fusion.apk
+Watermelon Fusion.apk.idsig

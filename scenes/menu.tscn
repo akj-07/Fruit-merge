@@ -9,6 +9,8 @@
 [ext_resource type="FontFile" uid="uid://bu7rb6jlkqmcu" path="res://assets/LilitaOne-Regular-NotoSans-Black.ttf" id="6_mj5lg"]
 
 [node name="Menu" type="Node2D"]
+position = Vector2(-165, -7)
+scale = Vector2(2, 2)
 script = ExtResource("1_v86rl")
 
 [node name="Background" type="Sprite2D" parent="."]
