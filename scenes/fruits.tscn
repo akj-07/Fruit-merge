@@ -51,7 +51,6 @@ animations = [{
 [node name="Fruits" type="RigidBody2D"]
 scale = Vector2(1, 0.995535)
 collision_layer = 2
-collision_mask = 3
 script = ExtResource("1_4b3k7")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

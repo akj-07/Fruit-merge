@@ -119,7 +119,7 @@ func setup_physics():
 	
 	# FIXED: Better physics material
 	var mat = PhysicsMaterial.new()
-	mat.bounce = 0.2  # Slightly higher bounce
+	mat.bounce = 0.1  # Slightly higher bounce
 	mat.friction = 0.8  # Higher friction to reduce sliding/spinning
 	physics_material_override = mat
 	
@@ -187,7 +187,7 @@ func _process(delta):
 		landing_line.visible = false
 
 func _on_body_entered(body):
-	print("Collision with: ", body.name, " Parent: ", body.get_parent().name if body.get_parent() else "No parent")
+	#print("Collision with: ", body.name, " Parent: ", body.get_parent().name if body.get_parent() else "No parent")
 	if is_merging:
 		return
 
@@ -206,17 +206,19 @@ func handle_floor_collision():
 		has_collided = true
 		is_on_floor = true
 		emit_signal("fruit_collided")
-		#invincible = false
-		#freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
+		await get_tree().create_timer(0.5).timeout  # Small delay to ensure settled
+		make_vulnerable()
 
 func handle_fruit_collision(other_fruit):
-	print("Fruit collision - has_collided before: ", has_collided)  # Debug print
+	#print("Fruit collision - has_collided before: ", has_collided)  # Debug print
 	if can_merge_with(other_fruit):
 		merge_with(other_fruit)
 	else:
 		if not has_collided:
 			has_collided = true
 			emit_signal("fruit_collided")
+			await get_tree().create_timer(0.5).timeout  # Small delay to ensure settled
+			make_vulnerable()
 
 func can_merge_with(other_fruit) -> bool:
 	if other_fruit.get_fruit_type() != fruit_type:
@@ -415,18 +417,6 @@ func has_crossed_limit() -> bool:
 	return global_position.y >= limit_y
 
 func _physics_process(delta):
-	var game_scene = get_node("/root/Game")
-	if position.y < 10: return  # Not yet dropped
-
-	if position.y < limit_y:  # Hasn't reached limit line yet
-		return
-
-	if not invincible and global_position.y >= limit_y:  
-		print("Has collided:",has_collided)
-		print("Physics process - Velocity: ", linear_velocity, " Position: ", global_position)
-		get_tree().change_scene_to_file("res://scenes/Game_over.tscn")
-		set_deferred("freeze", true)  # Prevent further motion after game over
-	
 	# FIXED: More aggressive angular velocity damping
 	# Clamp angular velocity to prevent wild spinning
 	if abs(angular_velocity) > 10.0:  # Maximum allowed rotation speed
@@ -447,3 +437,10 @@ func update_landing_line():
 		landing_line.visible = true
 	else:
 		landing_line.visible = false
+
+func make_vulnerable():
+	invincible = false
+	print("Fruit is now vulnerable to game over: ", self.name)
+	print("Current position: ", global_position)
+	print("Limit Y: ", limit_y)
+	
