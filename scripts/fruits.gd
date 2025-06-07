@@ -125,7 +125,7 @@ func setup_physics():
 	
 	# FIXED: Enable angular damping to prevent excessive rotation
 	angular_damp = 5.0  # Add this line - it's crucial!
-	linear_damp = 0.5   # Slight linear damping too
+	linear_damp = 0.1   # Slight linear damping too
 
 func initialize_fruit(type: int = -1):
 	if type >= 0:
@@ -217,7 +217,6 @@ func handle_fruit_collision(other_fruit):
 		if not has_collided:
 			has_collided = true
 			emit_signal("fruit_collided")
-			#invincible = false
 
 func can_merge_with(other_fruit) -> bool:
 	if other_fruit.get_fruit_type() != fruit_type:
@@ -352,23 +351,13 @@ func drop_fruit():
 	drop.play()
 	is_tweening = false
 	is_dragging = false
-	physics_material_override = PhysicsMaterial.new()
-	physics_material_override.bounce = 0.0
-	physics_material_override.friction = 1.0
 
 	self.global_position = global_position  
-	#freeze_mode = RigidBody2D.FREEZE_MODE_KINEMATIC # Changed from KINEMATIC
-	#apply_central_impulse(Vector2(0, 300))
-	#linear_velocity = Vector2(0, 300)
-	#angular_velocity = 0
-
-	# State flags
+	is_paused = false
+	freeze = false
 	has_collided = false
 	can_drop = false
-	invincible = true
-	#print("Dropping fruit - Position: ", global_position, " Velocity: ", linear_velocity)
-	#resume_physics()
-	#print("Dropping fruit - Position: ", global_position, " Velocity: ", linear_velocity, " has_collided: ", has_collided)
+	invincible = false
 	
 func resume_physics():
 	is_paused = false
