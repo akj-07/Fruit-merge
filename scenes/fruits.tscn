@@ -1,11 +1,12 @@
-[gd_scene load_steps=12 format=3 uid="uid://8uipysy3qh66"]
+[gd_scene load_steps=13 format=3 uid="uid://8uipysy3qh66"]
 
 [ext_resource type="Script" uid="uid://b1u6lek4qfejt" path="res://scripts/fruits.gd" id="1_4b3k7"]
 [ext_resource type="Texture2D" uid="uid://dgdqul0ah6mix" path="res://assets/fruits/guava.tres" id="2_iuj4e"]
-[ext_resource type="Shape2D" uid="uid://ccwmegkgcukrm" path="res://assets/fruits/apple_shape.tres" id="3_iuj4e"]
 [ext_resource type="AudioStream" uid="uid://cmpe40b0elkm6" path="res://audio/pop.mp3" id="4_5v7wr"]
 [ext_resource type="AudioStream" uid="uid://cs80uiow82hon" path="res://audio/ui-pop-sound-316482.mp3" id="5_5v7wr"]
 [ext_resource type="Texture2D" uid="uid://tfvki3jjuikd" path="res://assets/fruits/faces.png" id="5_mue5y"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_mue5y"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_5v7wr"]
 atlas = ExtResource("5_mue5y")
@@ -48,6 +49,9 @@ animations = [{
 
 [sub_resource type="Curve" id="Curve_5v7wr"]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_5v7wr"]
+radius = 106.076
+
 [node name="Fruits" type="RigidBody2D" groups=["Fruit"]]
 scale = Vector2(1, 0.995535)
 collision_layer = 2
@@ -56,7 +60,7 @@ script = ExtResource("1_4b3k7")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 scale = Vector2(11, 9.68)
-shape = ExtResource("3_iuj4e")
+shape = SubResource("CircleShape2D_mue5y")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(1.186, 1)
@@ -76,7 +80,18 @@ sprite_frames = SubResource("SpriteFrames_uroet")
 animation = &"idle"
 
 [node name="LandingLine" type="Line2D" parent="."]
-top_level = true
-z_index = 2
-z_as_relative = false
+z_index = 100
+position = Vector2(2, 109.489)
+points = PackedVector2Array(-1, -2.00897)
 width_curve = SubResource("Curve_5v7wr")
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+position = Vector2(2, 109.489)
+target_position = Vector2(0, 2000)
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("CircleShape2D_5v7wr")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

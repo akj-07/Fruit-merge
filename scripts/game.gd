@@ -45,7 +45,10 @@ func spawn_fruit():
 	
 	# Connect signals
 	current_fruit.connect("fruit_collided", Callable(self, "_on_fruit_collided"))
-	current_fruit.connect("fruit_merged", Callable(self, "_on_fruit_merged"))
+	#current_fruit.connect("fruit_merged", Callable(self, "_on_fruit_merged"))
+	
+func _on_fruit_collided(other_fruit):
+	print("Fruit collided with: ", other_fruit)
 
 func _on_limit_line_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("Fruit"):
@@ -93,9 +96,6 @@ func _on_game_over_timer_timeout():
 		# Pass score to game over scene
 		GameData.final_score = current_score
 		get_tree().change_scene_to_file("res://scenes/Game_over.tscn")
-
-func _on_fruit_collided():
-	await get_tree().create_timer(0.2).timeout 
 
 func _on_drop_zone_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("Fruit"):

@@ -24,8 +24,9 @@ const FRUIT_SHAPE = [2.5, 3.5, 6, 7, 8.5, 10, 11, 13, 15, 17, 19]
 @onready var merge: AudioStreamPlayer2D = $Merge
 @onready var face_anim: AnimatedSprite2D = $Face_anim
 @onready var sprite = $Sprite2D
-@onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
 @onready var tween: Tween
+@onready var physics_collision_shape: CollisionShape2D = $CollisionShape2D
 
 var invincible := true
 var fruit_type = 0
@@ -41,7 +42,7 @@ var limit_y: float = 0.0
 var is_dragging := false
 var drag_speed := 10.0 
 @onready var landing_line: Line2D = $LandingLine
-var raycast: RayCast2D
+@onready var raycast: RayCast2D = $RayCast2D
 
 func _ready() -> void:
 	add_to_group("Fruit")
@@ -51,17 +52,14 @@ func _ready() -> void:
 	create_tween_node()
 	
 	face_anim.play("idle") 
-	
-	raycast = RayCast2D.new()
-	raycast.target_position = Vector2.DOWN * 1000  # Long enough to reach the bottom
-	raycast.collision_mask = 1 | 2 # Layer for floor and other fruits
-	raycast.enabled = true
-	add_child(raycast)
-
 	# Setup landing line
 	raycast.position = Vector2.ZERO
-	landing_line.width = 8
-	landing_line.default_color = Color(1, 1, 0)
+	raycast.target_position = Vector2(0,2000)
+	raycast.enabled = true
+	raycast.collision_mask = 1
+	landing_line.width = 20
+	landing_line.visible = false
+	landing_line.default_color = Color(1, 1, 1, 1)
 
 func create_tween_node():
 	tween = create_tween()
@@ -109,29 +107,21 @@ func setup_physics():
 	gravity_scale = 1
 	collision_layer = 2
 	collision_mask = 1 | 2  
-	
-	# FIXED: More balanced mass distribution
-	# Use linear scaling instead of exponential
+
 	var base_mass = 1.0
 	var mass_multiplier = 1.0 + (fruit_type * 0.5)  # Gradual increase
 	mass = base_mass * mass_multiplier
 	
-	# FIXED: Better physics material
-	#var mat = PhysicsMaterial.new()
-	#mat.bounce = 0.1  # Slightly higher bounce
-	#mat.friction = 0.8  # Higher friction to reduce sliding/spinning
-	#physics_material_override = mat
-	
-	# FIXED: Enable angular damping to prevent excessive rotation
-	angular_damp = 5.0  # Add this line - it's crucial!
-	linear_damp = 0.1   # Slight linear damping too
+	# Enabled angular damping to prevent excessive rotation
+	angular_damp = 5.0  
+	linear_damp = 0.1   
 
 func initialize_fruit(type: int = -1):
 	if type >= 0:
 		fruit_type = type
 	else:
 		# Only generate the first three smallest fruits randomly
-		fruit_type = randi() % 5  # This will only generate cherry (0), strawberry (1), or grapes (2)
+		fruit_type = randi() % 3  # This will only generate cherry (0), strawberry (1), or grapes (2)
 	
 	set_fruit_appearance()
 
@@ -142,11 +132,15 @@ func set_fruit_appearance():
 	new_shape.radius = FRUIT_SHAPE[fruit_type]
 	collision_shape.shape = new_shape
 	
+	var physics_shape = CircleShape2D.new()
+	physics_shape.radius = FRUIT_SHAPE[fruit_type]
+	physics_collision_shape.shape = physics_shape
+
+	
 	var base_radius = 3.5  # Smallest fruit size, used for reference
 	var current_radius = FRUIT_SHAPE[fruit_type]
 	var scale_factor = current_radius / base_radius
 	face_anim.scale = Vector2(0.2, 0.198) * scale_factor
-
 
 func setup_collision_detection():
 	contact_monitor = true
@@ -173,6 +167,11 @@ func _process(delta):
 		update_landing_line()
 	else:
 		landing_line.visible = false
+	
+	if is_paused and can_drop:
+		update_landing_line()
+	else:
+		landing_line.visible = false
 
 func _on_body_entered(body):
 	if is_merging:
@@ -181,6 +180,9 @@ func _on_body_entered(body):
 	if body.name == "Floor":
 		handle_floor_collision()
 		return
+
+	if body.is_in_group("Fruit"):
+		emit_signal("fruit_collided", body)
 	
 	if body.is_in_group("Fruit") and body.has_method("get_fruit_type"):
 		handle_fruit_collision(body)
@@ -207,18 +209,16 @@ func handle_fruit_collision(other_fruit):
 
 func can_merge_with(other_fruit) -> bool:
 	if other_fruit.get_fruit_type() != fruit_type:
-		print("Not matched")
 		return false
 	
 	if fruit_type + 1 >= FRUIT_TEXTURES.size():
-		print("Largest Fruit")
 		return false
 	
-	#if is_merging or other_fruit.is_merging:
-		#return false
+	if is_merging or other_fruit.is_merging:
+		return false
 	
-	#if merge_timer > 0 or other_fruit.merge_timer > 0:
-		#return false
+	if merge_timer > 0 or other_fruit.merge_timer > 0:
+		return false
 	print("Matched...")
 	return true
 
@@ -254,9 +254,10 @@ func create_merged_fruit(merged_type: int, position: Vector2):
 	# Set the fruit type and position immediately
 	merged_fruit.initialize_fruit(merged_type)
 	merged_fruit.global_position = position
-	merged_fruit.setup_collision_detection()
-	
 	# Initialize the fruit's appearance
+	merged_fruit.reset_collision_state()
+	merged_fruit.sleeping = false
+	merged_fruit.has_collided = false
 	merged_fruit.set_fruit_appearance()
 	merged_fruit.limit_y = limit_y 
 	# Set a shorter merge timer for the new fruit
@@ -265,8 +266,6 @@ func create_merged_fruit(merged_type: int, position: Vector2):
 	#print("DEBUG: Merged fruit added to group?", merged_fruit.is_in_group("Fruit"))  # Should print true
 
 	# Ensure the new fruit can merge
-	merged_fruit.is_merging = false
-	merged_fruit.has_collided = false
 	# Start the grow animation
 	merged_fruit.add_to_group("Fruit")
 	merged_fruit.grow(true)
@@ -347,8 +346,7 @@ func resume_physics():
 	sleeping = false
 	has_collided = false
 	can_drop = false  
-	apply_central_impulse(Vector2(0, 300))
-	await get_tree().process_frame  	
+	await get_tree().process_frame 
 
 func _unhandled_input(event):
 	if is_paused and can_drop and not is_merging:
@@ -404,16 +402,30 @@ func _physics_process(delta):
 		angular_velocity *= 0.9  # Reduce rotation when nearly stationary
 
 func update_landing_line():
-	# Cast ray downward
-	raycast.force_raycast_update()
-
-	if raycast.is_colliding():
-		var collision_point = raycast.get_collision_point()
-		# Draw line from fruit to collision point
-		landing_line.points = [Vector2.ZERO, collision_point - global_position]
-		landing_line.visible = true
-	else:
+	if not is_paused or not can_drop:
 		landing_line.visible = false
+		return
+	
+	landing_line.clear_points()
+	
+	# Use PhysicsServer2D for a manual raycast from global position
+	var space_state = get_world_2d().direct_space_state
+	var query = PhysicsRayQueryParameters2D.create(
+		global_position,  # From fruit position
+		global_position + Vector2(0, 2000),  # Down 500 pixels
+		1  # Collision mask - adjust to match your floor
+	)
+	
+	var result = space_state.intersect_ray(query)
+	
+	if result:
+		# Convert global collision point to local coordinates
+		var start_point = Vector2.ZERO
+		var end_point = to_local(result.position)
+		
+		landing_line.add_point(start_point)
+		landing_line.add_point(end_point)
+		landing_line.visible = true
 
 func make_vulnerable():
 	invincible = false
