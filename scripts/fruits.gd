@@ -219,7 +219,6 @@ func can_merge_with(other_fruit) -> bool:
 	
 	if merge_timer > 0 or other_fruit.merge_timer > 0:
 		return false
-	print("Matched...")
 	return true
 
 func handle_general_collision():
@@ -263,7 +262,6 @@ func create_merged_fruit(merged_type: int, position: Vector2):
 	# Set a shorter merge timer for the new fruit
 	merged_fruit.merge_timer = 0.1
 	merged_fruit.setup_physics()
-	#print("DEBUG: Merged fruit added to group?", merged_fruit.is_in_group("Fruit"))  # Should print true
 
 	# Ensure the new fruit can merge
 	# Start the grow animation

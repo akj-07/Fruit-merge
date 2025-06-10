@@ -42,13 +42,6 @@ func spawn_fruit():
 	current_fruit.angular_damp = 10
 	current_fruit.apply_torque_impulse(0.0)
 	current_fruit.limit_y = limit_line.global_position.y
-	
-	# Connect signals
-	current_fruit.connect("fruit_collided", Callable(self, "_on_fruit_collided"))
-	#current_fruit.connect("fruit_merged", Callable(self, "_on_fruit_merged"))
-	
-func _on_fruit_collided(other_fruit):
-	print("Fruit collided with: ", other_fruit)
 
 func _on_limit_line_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("Fruit"):
