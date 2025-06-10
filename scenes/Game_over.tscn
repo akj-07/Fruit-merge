@@ -21,18 +21,18 @@ position = Vector2(351, 486)
 texture = ExtResource("1_1fmsk")
 
 [node name="exit_button" type="Button" parent="Panel"]
-offset_left = -56.0
-offset_top = 134.0
-offset_right = 69.0
-offset_bottom = 261.0
+offset_left = -62.0
+offset_top = 195.0
+offset_right = 63.0
+offset_bottom = 322.0
 icon = ExtResource("4_tod8s")
 metadata/_edit_use_anchors_ = true
 
 [node name="Reload" type="Button" parent="Panel"]
 offset_left = -87.0
-offset_top = -141.0
+offset_top = -6.00001
 offset_right = 38.0
-offset_bottom = -14.0
+offset_bottom = 121.0
 scale = Vector2(1.4, 1.4)
 icon = ExtResource("4_wg8tr")
 metadata/_edit_use_anchors_ = true
@@ -46,12 +46,46 @@ offset_bottom = 40.0
 [node name="Label" type="Label" parent="Control"]
 layout_mode = 0
 offset_left = 175.0
-offset_top = 207.0
+offset_top = 172.0
 offset_right = 551.0
-offset_bottom = 299.0
+offset_bottom = 264.0
 theme_override_fonts/font = ExtResource("6_u43vl")
 theme_override_font_sizes/font_size = 80
 text = "Game Over"
+
+[node name="Control2" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="HighScoreLabel" type="Label" parent="Control2"]
+layout_mode = 0
+offset_left = 211.0
+offset_top = 283.5
+offset_right = 529.0
+offset_bottom = 341.5
+theme_override_fonts/font = ExtResource("6_u43vl")
+theme_override_font_sizes/font_size = 50
+text = "High Score : 00"
+
+[node name="Control3" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 199.5
+offset_top = 371.0
+offset_right = 239.5
+offset_bottom = 411.0
+
+[node name="ScoreLabel" type="Label" parent="Control3"]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 8.0
+offset_right = 322.0
+offset_bottom = 66.0
+theme_override_fonts/font = ExtResource("6_u43vl")
+theme_override_font_sizes/font_size = 50
+text = "Final Score : 00"
 
 [connection signal="pressed" from="Panel/exit_button" to="." method="_on_exit_button_pressed"]
 [connection signal="pressed" from="Panel/Reload" to="." method="_on_reload_pressed"]

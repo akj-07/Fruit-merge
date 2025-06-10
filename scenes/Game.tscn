@@ -13,8 +13,7 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cpr0p"]
 size = Vector2(1423, 89)
 
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_78awf"]
-distance = -501.484
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_g4kob"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_s0nni"]
 size = Vector2(57.5658, 115.057)
@@ -49,12 +48,11 @@ scale = Vector2(-0.253015, 0.00882043)
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
-position = Vector2(0, -48)
-shape = SubResource("WorldBoundaryShape2D_78awf")
+scale = Vector2(240, 12)
+shape = SubResource("RectangleShape2D_g4kob")
 
 [node name="Left_Wall" type="StaticBody2D" parent="."]
 position = Vector2(-42, 366)
-collision_layer = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Left_Wall"]
 position = Vector2(-7.5, 745.7)
@@ -63,7 +61,6 @@ shape = SubResource("RectangleShape2D_s0nni")
 
 [node name="Right_Wall" type="StaticBody2D" parent="."]
 position = Vector2(1078, 407)
-collision_layer = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Right_Wall"]
 position = Vector2(42, 704)

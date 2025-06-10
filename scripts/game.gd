@@ -16,8 +16,6 @@ var can_spawn_fruit := true
 
 func _ready():
 	randomize()
-	print("Limit line position: ", limit_line.global_position)
-	
 	# Connect game over timer
 	if not game_over_timer.timeout.is_connected(_on_game_over_timer_timeout):
 		game_over_timer.timeout.connect(_on_game_over_timer_timeout)
@@ -42,6 +40,7 @@ func spawn_fruit():
 	current_fruit.update_score.connect(Update_Label)
 	current_fruit.add_to_group("Fruit")
 	current_fruit.angular_damp = 10
+	current_fruit.apply_torque_impulse(0.0)
 	current_fruit.limit_y = limit_line.global_position.y
 	
 	# Connect signals
@@ -51,35 +50,25 @@ func spawn_fruit():
 func _on_limit_line_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("Fruit"):
 		return
-	print("Fruit entered limit line: ", body.name)
-	print("Is invincible: ", body.invincible)
-	print("Game over triggered: ", game_over_triggered)
-	
-	# Handle game over logic
-	if not game_over_triggered and not body.invincible:
-		print("Starting game over timer")
-		game_over_timer.start()
-	elif not game_over_triggered and body.invincible:
-		# If fruit is invincible but above limit, wait for it to become vulnerable
-		print("Fruit above limit but still invincible - waiting for vulnerability")
 
 	# Handle game over logic
 	if not game_over_triggered and not body.invincible:
-		print("Non-invincible fruit crossed limit line: ", body.name)
+		game_over_timer.start()
+
+	# Handle game over logic
+	if not game_over_triggered and not body.invincible:
 		game_over_timer.start()
 
 func _on_limit_line_body_exited(body: Node2D) -> void:
 	# Handle game over timer cancellation
 	if body.is_in_group("Fruit") and game_over_timer.time_left > 0:
 		game_over_timer.stop()
-		print("Fruit moved back below limit line - timer stopped")
 
 func trigger_game_over():
 	if game_over_triggered:
 		return
 		
 	game_over_triggered = true
-	print("Game over triggered! Final score: ", current_score)
 	
 	# Stop spawning new fruits
 	check_fruit.stop()
@@ -120,7 +109,6 @@ func _on_drop_zone_body_exited(body: Node2D) -> void:
 		body.set_drag_allowed(false)
 		# Start check_fruit timer when fruit leaves drop zone
 		check_fruit.start()
-		print("Fruit left drop zone, starting check timer")
 
 func Update_Label(points: int) -> void:
 	current_score += points
@@ -140,10 +128,6 @@ func _on_check_fruit_timeout() -> void:
 	var overlapping = drop_zone.get_overlapping_bodies()
 	for body in overlapping:
 		if body.is_in_group("Fruit"):
-			print("Fruit still above limit line - no new spawn")
 			return
-	
-	# If no fruits are above limit line, spawn new fruit
-	print("Check timer completed, spawning new fruit")
 	can_spawn_fruit = true
 	spawn_fruit()

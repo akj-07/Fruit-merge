@@ -44,6 +44,7 @@ var drag_speed := 10.0
 var raycast: RayCast2D
 
 func _ready() -> void:
+	add_to_group("Fruit")
 	initialize_fruit()
 	setup_physics()
 	setup_collision_detection()
@@ -60,9 +61,7 @@ func _ready() -> void:
 	# Setup landing line
 	raycast.position = Vector2.ZERO
 	landing_line.width = 8
-	landing_line.default_color = Color(1, 0, 0)
-	print("Paused:", is_paused, " Drop allowed:", can_drop)
-
+	landing_line.default_color = Color(1, 1, 0)
 
 func create_tween_node():
 	tween = create_tween()
@@ -118,10 +117,10 @@ func setup_physics():
 	mass = base_mass * mass_multiplier
 	
 	# FIXED: Better physics material
-	var mat = PhysicsMaterial.new()
-	mat.bounce = 0.1  # Slightly higher bounce
-	mat.friction = 0.8  # Higher friction to reduce sliding/spinning
-	physics_material_override = mat
+	#var mat = PhysicsMaterial.new()
+	#mat.bounce = 0.1  # Slightly higher bounce
+	#mat.friction = 0.8  # Higher friction to reduce sliding/spinning
+	#physics_material_override = mat
 	
 	# FIXED: Enable angular damping to prevent excessive rotation
 	angular_damp = 5.0  # Add this line - it's crucial!
@@ -138,12 +137,7 @@ func initialize_fruit(type: int = -1):
 
 func set_fruit_appearance():
 	sprite.texture = FRUIT_TEXTURES[fruit_type]
-	if fruit_type == 0:  # Cherry
-		sprite.scale = Vector2(1.5, 1.5)  # 50% larger
-	elif fruit_type == 1:  # Strawberry
-		sprite.scale = Vector2(1.3, 1.3)  # 30% larger
-	else:
-		sprite.scale = Vector2.ONE
+	sprite.scale = Vector2.ONE
 	var new_shape = CircleShape2D.new()
 	new_shape.radius = FRUIT_SHAPE[fruit_type]
 	collision_shape.shape = new_shape
@@ -151,18 +145,12 @@ func set_fruit_appearance():
 	var base_radius = 3.5  # Smallest fruit size, used for reference
 	var current_radius = FRUIT_SHAPE[fruit_type]
 	var scale_factor = current_radius / base_radius
-	
-	if fruit_type == 0:  # Cherry
-		face_anim.scale = Vector2(0.3, 0.297)  # 50% larger
-	elif fruit_type == 1:  # Strawberry
-		face_anim.scale = Vector2(0.26, 0.257)  # 30% larger
-	else:
-		face_anim.scale = Vector2(0.2, 0.198) * scale_factor
+	face_anim.scale = Vector2(0.2, 0.198) * scale_factor
 
 
 func setup_collision_detection():
 	contact_monitor = true
-	max_contacts_reported = 1
+	max_contacts_reported = 100
 	connect("body_entered", Callable(self, "_on_body_entered"))
 
 func _process(delta):
@@ -187,7 +175,6 @@ func _process(delta):
 		landing_line.visible = false
 
 func _on_body_entered(body):
-	#print("Collision with: ", body.name, " Parent: ", body.get_parent().name if body.get_parent() else "No parent")
 	if is_merging:
 		return
 
@@ -201,7 +188,6 @@ func _on_body_entered(body):
 		handle_general_collision()
 
 func handle_floor_collision():
-	print("Floor collision - has_collided before: ", has_collided)
 	if not has_collided:
 		has_collided = true
 		is_on_floor = true
@@ -210,7 +196,6 @@ func handle_floor_collision():
 		make_vulnerable()
 
 func handle_fruit_collision(other_fruit):
-	#print("Fruit collision - has_collided before: ", has_collided)  # Debug print
 	if can_merge_with(other_fruit):
 		merge_with(other_fruit)
 	else:
@@ -222,18 +207,19 @@ func handle_fruit_collision(other_fruit):
 
 func can_merge_with(other_fruit) -> bool:
 	if other_fruit.get_fruit_type() != fruit_type:
+		print("Not matched")
 		return false
 	
 	if fruit_type + 1 >= FRUIT_TEXTURES.size():
+		print("Largest Fruit")
 		return false
 	
-	if is_merging or other_fruit.is_merging:
-		return false
+	#if is_merging or other_fruit.is_merging:
+		#return false
 	
-	if merge_timer > 0 or other_fruit.merge_timer > 0:
-		return false
-	
-	
+	#if merge_timer > 0 or other_fruit.merge_timer > 0:
+		#return false
+	print("Matched...")
 	return true
 
 func handle_general_collision():
@@ -242,9 +228,6 @@ func handle_general_collision():
 		emit_signal("fruit_collided")
 
 func merge_with(other_fruit):
-	if is_merging or other_fruit.is_merging:
-		return
-	
 	is_merging = true
 	other_fruit.is_merging = true
 	
@@ -269,8 +252,9 @@ func create_merged_fruit(merged_type: int, position: Vector2):
 	get_parent().add_child(merged_fruit)
 	
 	# Set the fruit type and position immediately
-	merged_fruit.fruit_type = merged_type
+	merged_fruit.initialize_fruit(merged_type)
 	merged_fruit.global_position = position
+	merged_fruit.setup_collision_detection()
 	
 	# Initialize the fruit's appearance
 	merged_fruit.set_fruit_appearance()
@@ -278,23 +262,19 @@ func create_merged_fruit(merged_type: int, position: Vector2):
 	# Set a shorter merge timer for the new fruit
 	merged_fruit.merge_timer = 0.1
 	merged_fruit.setup_physics()
-	
+	#print("DEBUG: Merged fruit added to group?", merged_fruit.is_in_group("Fruit"))  # Should print true
+
 	# Ensure the new fruit can merge
 	merged_fruit.is_merging = false
 	merged_fruit.has_collided = false
-	
-	#merged_fruit.linear_velocity = Vector2.ZERO
-	#merged_fruit.angular_velocity = 0
-	#
 	# Start the grow animation
-	merged_fruit.grow(true)
 	merged_fruit.add_to_group("Fruit")
-# NEW TWEENING FUNCTIONS
+	merged_fruit.grow(true)
+
 func pause_until_released():
 	if is_paused:
 		return
 	is_paused = true
-	#freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
 	sleeping = true
 	can_drop = true
 	set_pickable(true)
@@ -363,16 +343,13 @@ func drop_fruit():
 	
 func resume_physics():
 	is_paused = false
-	#freeze_mode = RigidBody2D.FreezeMode.FREEZE_MODE_KINEMATIC
 	freeze = false
 	sleeping = false
 	has_collided = false
-	can_drop = false  # Prevent further interaction once dropped
+	can_drop = false  
 	apply_central_impulse(Vector2(0, 300))
-	await get_tree().process_frame  # Wait a frame to ensure state sync
-	print("Resuming physics - Velocity: ", linear_velocity)
-	
-# ALTERNATIVE: Click anywhere on screen to move fruit
+	await get_tree().process_frame  	
+
 func _unhandled_input(event):
 	if is_paused and can_drop and not is_merging:
 		if event is InputEventScreenTouch or event is InputEventMouseButton:
@@ -440,7 +417,3 @@ func update_landing_line():
 
 func make_vulnerable():
 	invincible = false
-	print("Fruit is now vulnerable to game over: ", self.name)
-	print("Current position: ", global_position)
-	print("Limit Y: ", limit_y)
-	

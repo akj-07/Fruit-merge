@@ -1,7 +1,7 @@
 extends Node2D
 
-@onready var score_label: Label = $Control/ScoreLabel  # Add this to your scene
-@onready var high_score_label: Label = $Control/HighScoreLabel  # Add this to your scene
+@onready var score_label: Label = $Control3/ScoreLabel  # Add this to your scene
+@onready var high_score_label: Label = $Control2/HighScoreLabel  # Add this to your scene
 @onready var reload_button: Button = $Control/ReloadButton
 @onready var menu_button: Button = $Control/MenuButton
 @onready var exit_button: Button = $Control/ExitButton
