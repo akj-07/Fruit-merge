@@ -77,7 +77,7 @@ func grow(from_fusion := false):
 		pass
 
 	# Reset sprite scale and collision radius
-	sprite.scale = Vector2.ZERO
+	sprite.scale = Vector2(1.2,1.2)
 	if collision_shape.shape is CircleShape2D:
 		collision_shape.shape.radius = 0
 
@@ -87,7 +87,7 @@ func grow(from_fusion := false):
 	tween = create_tween()
 
 	# Animate sprite scaling
-	tween.tween_property(sprite, "scale", Vector2.ONE, 0.25)\
+	tween.tween_property(sprite, "scale", Vector2(1.2,1.2), 0.25)\
 		.set_trans(Tween.TRANS_BOUNCE)\
 		.set_ease(Tween.EASE_IN_OUT)
 
@@ -121,19 +121,19 @@ func initialize_fruit(type: int = -1):
 		fruit_type = type
 	else:
 		# Only generate the first three smallest fruits randomly
-		fruit_type = randi() % 3  # This will only generate cherry (0), strawberry (1), or grapes (2)
+		fruit_type = randi() % 5  # This will only generate cherry (0), strawberry (1), or grapes (2)
 	
 	set_fruit_appearance()
 
 func set_fruit_appearance():
 	sprite.texture = FRUIT_TEXTURES[fruit_type]
-	sprite.scale = Vector2.ONE
+	sprite.scale = Vector2(1.2,1.2)
 	var new_shape = CircleShape2D.new()
-	new_shape.radius = FRUIT_SHAPE[fruit_type]
+	new_shape.radius = FRUIT_SHAPE[fruit_type*1.2]
 	collision_shape.shape = new_shape
 	
 	var physics_shape = CircleShape2D.new()
-	physics_shape.radius = FRUIT_SHAPE[fruit_type]
+	physics_shape.radius = FRUIT_SHAPE[fruit_type*1.2]
 	physics_collision_shape.shape = physics_shape
 
 	

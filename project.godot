@@ -10,11 +10,12 @@ config_version=5
 
 [application]
 
-config/name="Watermelon Fusion"
+config/name="Frootopia"
 run/main_scene="res://scenes/Game.tscn"
 config/features=PackedStringArray("4.4", "Mobile")
 boot_splash/image="uid://cymdc2k8ln080"
-config/icon="res://icon.svg"
+config/icon="uid://d4kvsj7wb5ha5"
+boot_splash/minimum_display_time=10
 
 [audio]
 
