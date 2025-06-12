@@ -123,7 +123,9 @@ func set_fruit_appearance():
 	physics_collision_shape.shape = physics_shape
 
 	# Face animation scale (optional)
-	if fruit_type<2:
+	if fruit_type == 0:
+		face_anim.scale = Vector2(0.15,0.15) * scale_factor
+	elif fruit_type>0 and fruit_type<2:
 		face_anim.scale = Vector2(0.2, 0.198) * scale_factor
 	else:
 		face_anim.scale = Vector2(0.4,0.396) * scale_factor
@@ -177,6 +179,7 @@ func _on_body_entered(body):
 
 func handle_floor_collision():
 	if not has_collided:
+		play_rejection_animation()
 		has_collided = true
 		is_on_floor = true
 		emit_signal("fruit_collided")
@@ -188,6 +191,7 @@ func handle_fruit_collision(other_fruit):
 		merge_with(other_fruit)
 	else:
 		if not has_collided:
+			play_rejection_animation()
 			has_collided = true
 			emit_signal("fruit_collided")
 			await get_tree().create_timer(0.5).timeout  # Small delay to ensure settled
@@ -209,6 +213,7 @@ func can_merge_with(other_fruit) -> bool:
 
 func handle_general_collision():
 	if not has_collided:
+		play_rejection_animation()
 		has_collided = true
 		emit_signal("fruit_collided")
 
@@ -413,3 +418,13 @@ func update_landing_line():
 
 func make_vulnerable():
 	invincible = false
+
+func play_rejection_animation():
+	var squash_tween = create_tween()
+	var original_scale = sprite.scale
+	var squash_scale = original_scale * Vector2(1.2, 0.8)
+	var rebound_scale = original_scale * Vector2(0.98, 1.02)
+
+	squash_tween.tween_property(sprite, "scale", squash_scale, 0.05)
+	squash_tween.tween_property(sprite, "scale", rebound_scale, 0.05)
+	squash_tween.tween_property(sprite, "scale", original_scale, 0.1)
