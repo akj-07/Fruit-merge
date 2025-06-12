@@ -20,6 +20,19 @@ const FRUIT_TEXTURES = [
 	preload("res://assets/fruits/watermelon.tres"),
 ]
 const FRUIT_SHAPE = [2.5, 3.5, 6, 7, 8.5, 10, 11, 13, 15, 17, 19]
+const FRUIT_SCALE_FACTORS = [
+	2.0,  # Cherry
+	1.3,  # Strawberry
+	1.2,  # Grapes
+	1.0,  # Lemon
+	1.0,  # Orange
+	1.0,  # Guava
+	1.0,  # Pear
+	1.0,  # Peach
+	1.0,  # Pineapple
+	1.0,  # Melon
+	1.0   # Watermelon
+]
 @onready var drop: AudioStreamPlayer2D = $Drop
 @onready var merge: AudioStreamPlayer2D = $Merge
 @onready var face_anim: AnimatedSprite2D = $Face_anim
@@ -66,43 +79,6 @@ func create_tween_node():
 	tween.set_loops(0)  # No loops
 	tween.pause()  # Start paused
 
-func grow(from_fusion := false):
-	if is_tweening:
-		return
-	
-	is_tweening = true
-
-	if from_fusion:
-		# Optional: Add effects (sound, flash, etc.)
-		pass
-
-	# Reset sprite scale and collision radius
-	sprite.scale = Vector2(1.2,1.2)
-	if collision_shape.shape is CircleShape2D:
-		collision_shape.shape.radius = 0
-
-	# Kill existing tween if needed
-	if tween:
-		tween.kill()
-	tween = create_tween()
-
-	# Animate sprite scaling
-	tween.tween_property(sprite, "scale", Vector2(1.2,1.2), 0.25)\
-		.set_trans(Tween.TRANS_BOUNCE)\
-		.set_ease(Tween.EASE_IN_OUT)
-
-	# Animate collision radius
-	var target_radius = FRUIT_SHAPE[fruit_type]
-	tween.tween_method(
-		func(r): collision_shape.shape.radius = r,
-		0.0, target_radius, 0.25
-	)
-
-	# Reset tweening flag when done
-	tween.connect("finished", func():
-		is_tweening = false
-	)
-
 func setup_physics():
 	gravity_scale = 1
 	collision_layer = 2
@@ -127,20 +103,30 @@ func initialize_fruit(type: int = -1):
 
 func set_fruit_appearance():
 	sprite.texture = FRUIT_TEXTURES[fruit_type]
-	sprite.scale = Vector2(1.2,1.2)
+
+	# Get base size from AtlasTexture's region
+	var region_size = sprite.texture.region.size
+	var base_radius = region_size.x / 2.0  # Assuming circular shape
+
+	# Apply scale factor for this fruit type
+	var scale_factor = FRUIT_SCALE_FACTORS[fruit_type]
+	sprite.scale = Vector2.ONE * scale_factor
+
+	# Update collision shape (Area2D)
 	var new_shape = CircleShape2D.new()
-	new_shape.radius = FRUIT_SHAPE[fruit_type*1.2]
+	new_shape.radius = base_radius * scale_factor
 	collision_shape.shape = new_shape
-	
+
+	# Update physics collision shape
 	var physics_shape = CircleShape2D.new()
-	physics_shape.radius = FRUIT_SHAPE[fruit_type*1.2]
+	physics_shape.radius = base_radius * scale_factor
 	physics_collision_shape.shape = physics_shape
 
-	
-	var base_radius = 3.5  # Smallest fruit size, used for reference
-	var current_radius = FRUIT_SHAPE[fruit_type]
-	var scale_factor = current_radius / base_radius
-	face_anim.scale = Vector2(0.2, 0.198) * scale_factor
+	# Face animation scale (optional)
+	if fruit_type<2:
+		face_anim.scale = Vector2(0.2, 0.198) * scale_factor
+	else:
+		face_anim.scale = Vector2(0.4,0.396) * scale_factor
 
 func setup_collision_detection():
 	contact_monitor = true
@@ -266,7 +252,7 @@ func create_merged_fruit(merged_type: int, position: Vector2):
 	# Ensure the new fruit can merge
 	# Start the grow animation
 	merged_fruit.add_to_group("Fruit")
-	merged_fruit.grow(true)
+	#merged_fruit.grow(true)
 
 func pause_until_released():
 	if is_paused:

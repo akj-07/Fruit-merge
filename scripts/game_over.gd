@@ -30,7 +30,7 @@ func _ready() -> void:
 	if menu_button:
 		menu_button.pressed.connect(_on_menu_pressed)
 	if exit_button:
-		exit_button.pressed.connect(_on_exit_pressed)
+		exit_button.pressed.connect(_on_exit_button_pressed)
 
 func update_score_display():
 	if score_label:
@@ -66,5 +66,5 @@ func _on_menu_pressed() -> void:
 	# Go back to main menu
 	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")  # Adjust path as needed
 
-func _on_exit_pressed() -> void:
+func _on_exit_button_pressed() -> void:
 	get_tree().quit()

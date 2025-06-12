@@ -35,7 +35,7 @@ func spawn_fruit():
 	can_spawn_fruit = false
 	
 	current_fruit = fruit_scene.instantiate()
-	current_fruit.position = Vector2(580, 50)
+	current_fruit.position = Vector2(580, 520)
 	add_child(current_fruit)
 	current_fruit.update_score.connect(Update_Label)
 	current_fruit.add_to_group("Fruit")

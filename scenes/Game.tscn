@@ -11,7 +11,7 @@
 [ext_resource type="AudioStream" uid="uid://bqt5dh3nfl3vi" path="res://assets/time_for_adventure.mp3" id="9_g4kob"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cpr0p"]
-size = Vector2(1423, 89)
+size = Vector2(1423, 0.697517)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_g4kob"]
 
@@ -35,11 +35,13 @@ texture = ExtResource("2_qbsmt")
 
 [node name="Drop Zone" type="Area2D" parent="."]
 position = Vector2(-27, 323)
+scale = Vector2(1.01917, 1.75491)
 collision_mask = 2
 script = ExtResource("4_s0nni")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Drop Zone"]
-position = Vector2(543, 189)
+position = Vector2(543, 164.46)
+scale = Vector2(1, 1)
 shape = SubResource("RectangleShape2D_cpr0p")
 
 [node name="Floor" type="StaticBody2D" parent="."]

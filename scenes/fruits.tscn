@@ -53,13 +53,11 @@ animations = [{
 radius = 106.076
 
 [node name="Fruits" type="RigidBody2D" groups=["Fruit"]]
-scale = Vector2(1.2, 1.2)
 collision_layer = 2
 collision_mask = 3
 script = ExtResource("1_4b3k7")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-scale = Vector2(11, 9.68)
 shape = SubResource("CircleShape2D_mue5y")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
@@ -92,7 +90,6 @@ target_position = Vector2(0, 2000)
 [node name="Area2D" type="Area2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-scale = Vector2(1.23333, 1)
 shape = SubResource("CircleShape2D_5v7wr")
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
